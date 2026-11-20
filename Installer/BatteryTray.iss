@@ -1,7 +1,7 @@
 ﻿[Setup]
 AppId={{B7A2E9C1-4D8F-4E2A-9B1C-8F3D2E1A7C90}
 AppName=BatteryTray
-AppVersion=1.1.0
+AppVersion=1.2.0
 AppPublisher=BatteryTray Monitor
 DefaultDirName={autopf}\BatteryTray
 DefaultGroupName=BatteryTray
@@ -9,7 +9,7 @@ PrivilegesRequired=lowest
 AppMutex=Global\BatteryTraySingleInstanceMutex
 CloseApplications=yes
 OutputDir=.
-OutputBaseFilename=BatteryTray_Setup_v1.1.0
+OutputBaseFilename=BatteryTray_Setup_v1.2.0
 SetupIconFile=..\app.ico
 UninstallDisplayIcon={app}\BatteryTray.exe
 Compression=lzma2
@@ -36,5 +36,6 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\BatteryTray.exe"; Description: "Mở BatteryTray ngay sau khi cài đặt"; Flags: nowait postinstall skipifsilent
+
 
 
