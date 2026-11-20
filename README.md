@@ -5,8 +5,8 @@
 ## Tính năng chính
 - Hiển thị trực tiếp `[Icon thiết bị + % pin]` cạnh khay hệ thống Windows 10/11 hoặc thu gọn thành icon trong System Tray.
 - Hỗ trợ mọi thiết bị ngoại vi kết nối qua **Bluetooth** (chuẩn Windows PnP Battery Service).
-- Hỗ trợ đọc pin trực tiếp qua đầu thu **USB 2.4GHz Nearlink 8K** cho chuột **ATK X1** (`VID_373B&PID_108C`).
-- Kiến trúc `IBatteryProvider` dễ dàng mở rộng thêm đầu thu của các hãng khác (Logitech, Razer...).
+- Hỗ trợ đọc phần trăm pin qua đầu thu **USB 2.4GHz** dành cho **hãng chuột ATK** (các hãng chuột khác sẽ được cập nhật trong những phiên bản sau).
+- Xây dựng theo kiến trúc mô-đun `IBatteryProvider`, thuận tiện để bổ sung giao thức của các hãng mới.
 
 ## Cài đặt
 Tải file `BatteryTray_Setup_v1.0.exe` tại mục **Releases** bên phải và chạy trình cài đặt.
