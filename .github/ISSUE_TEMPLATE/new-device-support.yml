@@ -1,0 +1,64 @@
+﻿name: Yêu cầu hỗ trợ thiết bị mới (New Device Support)
+description: Gửi mã VID/PID và dữ liệu HID để thêm hỗ trợ đọc % pin qua đầu thu USB 2.4GHz.
+title: "[Device Support]: "
+labels: ["enhancement", "device-support"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > **Lưu ý:** Mọi thiết bị kết nối qua **Bluetooth** đều đã được `BatteryTray` tự động hỗ trợ sẵn. Biểu mẫu này chỉ dành cho các thiết bị kết nối qua **đầu thu USB 2.4GHz (Wireless Dongle)**.
+
+  - type: input
+    id: device_name
+    attributes:
+      label: Tên hãng và mẫu thiết bị
+      description: Ghi rõ tên hãng, dòng sản phẩm và loại đầu thu (1K, 4K hoặc 8K).
+      placeholder: "Ví dụ: Lamzu Maya X (8K Dongle) hoặc VXE R1 Pro"
+    validations:
+      required: true
+
+  - type: input
+    id: current_battery
+    attributes:
+      label: Phần trăm pin thực tế lúc lấy log
+      description: Mở phần mềm chính hãng (hoặc Web Driver) để xem mức pin hiện tại nhằm đối chiếu vị trí byte pin.
+      placeholder: "Ví dụ: 76% (không cắm dây sạc)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: vid_pid
+    attributes:
+      label: 1. Mã phần cứng USB (VID & PID)
+      description: |
+        Cắm đầu thu USB 2.4GHz vào máy, mở **PowerShell** và chạy lệnh sau:
+        ```powershell
+        Get-PnpDevice -PresentOnly | Where-Object { $_.InstanceId -like "HID\VID_*" } | Select-Object FriendlyName, InstanceId
+        ```
+        Copy toàn bộ kết quả liên quan đến chuột/bàn phím của bạn và dán vào ô bên dưới:
+      placeholder: "HID\\VID_XXXX&PID_YYYY&MI_01\\..."
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: hid_logs
+    attributes:
+      label: 2. Log gói tin WebHID (Nếu hãng có Web Driver)
+      description: |
+        Nếu thiết bị của bạn cấu hình qua trình duyệt (như **Lamzu, Pulsar, VXE, Scyrox, Ninjutso, Sora...**):
+        1. Mở trang Web Driver trên Chrome/Edge và kết nối với đầu thu.
+        2. Nhấn **F12** -> chuyển sang tab **Console** (gõ `allow pasting` rồi nhấn Enter nếu trình duyệt chặn dán).
+        3. Dán đoạn mã bắt gói tin HID và nhấn **Enter**.
+        4. Bấm làm mới hoặc đổi nhẹ 1 thông số trên web rồi copy các dòng `[OUT]` và `[IN ]` dán vào bên dưới:
+      placeholder: "[OUT] ID=0x05: ...\n[IN ] ID=0x05: ..."
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra_notes
+    attributes:
+      label: Ghi chú thêm (Tùy chọn)
+      description: Thông tin bổ sung như đường dẫn trang Web Driver của hãng hoặc trạng thái sạc.
+      placeholder: "Ví dụ: Web driver của hãng tại https://..."
