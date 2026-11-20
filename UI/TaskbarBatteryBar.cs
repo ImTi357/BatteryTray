@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -16,12 +17,10 @@ namespace BatteryTray
         private readonly ContextMenuStrip _contextMenu;
         private readonly System.Windows.Forms.Timer _dockSyncTimer;
 
+        private const int WS_EX_LAYERED = 0x00080000;
         private const int WS_EX_TOOLWINDOW = 0x00000080;
         private const int WS_EX_NOACTIVATE = 0x08000000;
         private const int WS_EX_TOPMOST = 0x00000008;
-
-        // Dùng màu Magenta làm TransparencyKey để chữ và icon sắc nét tuyệt đối trên Taskbar
-        private static readonly Color ChromaKeyColor = Color.FromArgb(255, 0, 255);
 
         public TaskbarBatteryBar(ContextMenuStrip contextMenu)
         {
@@ -31,9 +30,6 @@ namespace BatteryTray
             ShowInTaskbar = false;
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
-            DoubleBuffered = true;
-            BackColor = ChromaKeyColor;
-            TransparencyKey = ChromaKeyColor;
 
             MouseUp += OnBarMouseUp;
 
@@ -47,7 +43,7 @@ namespace BatteryTray
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ExStyle |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TOPMOST;
+                cp.ExStyle |= WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_TOPMOST;
                 return cp;
             }
         }
@@ -69,7 +65,7 @@ namespace BatteryTray
             RecalculateLayout();
             if (!Visible) Show();
             SyncPositionToTaskbar();
-            Invalidate();
+            RenderLayeredBitmap();
         }
 
         private void RecalculateLayout()
@@ -80,7 +76,8 @@ namespace BatteryTray
             int gap = (int)(5 * scale);
             int totalWidth = (int)(8 * scale);
 
-            using var g = CreateGraphics();
+            using var tmpBmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
+            using var g = Graphics.FromImage(tmpBmp);
             using var font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
 
             foreach (var dev in _devices)
@@ -142,61 +139,105 @@ namespace BatteryTray
             }
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        private void RenderLayeredBitmap()
         {
-            base.OnPaint(e);
-            if (_devices.Count == 0) return;
+            if (!IsHandleCreated || Width <= 0 || Height <= 0 || _devices.Count == 0) return;
 
-            Graphics g = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
-
-            float scale = DeviceDpi / 96f;
-
-            // Vẽ nền mờ (hoặc nền tiệp màu Taskbar) nếu bật tùy chọn "Background behind taskbar text"
-            if (_showBackgroundPill)
+            using var bitmap = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bitmap))
             {
-                Color pillColor = _isDarkTaskbar
-                    ? Color.FromArgb(44, 44, 44)
-                    : Color.FromArgb(238, 242, 246);
-                Color borderColor = _isDarkTaskbar
-                    ? Color.FromArgb(72, 72, 72)
-                    : Color.FromArgb(205, 212, 220);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+                g.Clear(Color.Transparent);
 
-                using var bgPath = CreateRoundedRect(new Rectangle(0, 0, Width - 1, Height - 1), (int)(6 * scale));
-                using var bgBrush = new SolidBrush(pillColor);
-                using var borderPen = new Pen(borderColor, 1f);
-                g.FillPath(bgBrush, bgPath);
-                g.DrawPath(borderPen, bgPath);
+                float scale = DeviceDpi / 96f;
+
+                if (_showBackgroundPill)
+                {
+                    Color pillColor = _isDarkTaskbar
+                        ? Color.FromArgb(190, 36, 36, 36)
+                        : Color.FromArgb(215, 243, 246, 250);
+                    Color borderColor = _isDarkTaskbar
+                        ? Color.FromArgb(140, 85, 85, 85)
+                        : Color.FromArgb(160, 195, 204, 214);
+
+                    using var bgPath = CreateRoundedRect(new Rectangle(0, 0, Width - 1, Height - 1), (int)(6 * scale));
+                    using var bgBrush = new SolidBrush(pillColor);
+                    using var borderPen = new Pen(borderColor, 1f);
+                    g.FillPath(bgBrush, bgPath);
+                    g.DrawPath(borderPen, bgPath);
+                }
+                else
+                {
+                    // Lớp nền alpha = 1 (vô hình với mắt và ảnh chụp nhưng giúp vùng trống giữa icon và chữ luôn nhận click chuột)
+                    using var hitBrush = new SolidBrush(Color.FromArgb(1, 0, 0, 0));
+                    g.FillRectangle(hitBrush, 0, 0, Width, Height);
+                }
+
+                Color fgColor = _isDarkTaskbar ? Color.White : Color.FromArgb(24, 24, 24);
+                using var font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+
+                int cursorX = (int)(8 * scale);
+                int iconW = (int)(19 * scale);
+                int iconH = (int)(13 * scale);
+                int gap = (int)(5 * scale);
+                int itemPad = (int)(10 * scale);
+
+                foreach (var dev in _devices)
+                {
+                    Color itemColor = dev.BatteryPercent <= 20
+                        ? Color.FromArgb(232, 35, 35)
+                        : fgColor;
+
+                    int iconY = (Height - iconH) / 2;
+                    DrawDeviceVectorIcon(g, dev.Category, new Rectangle(cursorX, iconY, iconW, iconH), itemColor, scale);
+                    cursorX += iconW + gap;
+
+                    string pctText = $"{dev.BatteryPercent}%";
+                    SizeF textSize = g.MeasureString(pctText, font);
+                    float textY = (Height - textSize.Height) / 2f;
+
+                    using var textBrush = new SolidBrush(itemColor);
+                    g.DrawString(pctText, font, textBrush, cursorX, textY);
+
+                    cursorX += (int)Math.Ceiling(textSize.Width) + itemPad;
+                }
             }
 
-            Color fgColor = _isDarkTaskbar ? Color.White : Color.FromArgb(24, 24, 24);
-            using var font = new Font("Segoe UI", 9.5f, FontStyle.Regular);
+            ApplyBitmapToLayeredWindow(bitmap);
+        }
 
-            int cursorX = (int)(8 * scale);
-            int iconW = (int)(19 * scale);
-            int iconH = (int)(13 * scale);
-            int gap = (int)(5 * scale);
-            int itemPad = (int)(10 * scale);
+        private void ApplyBitmapToLayeredWindow(Bitmap bitmap)
+        {
+            IntPtr screenDc = GetDC(IntPtr.Zero);
+            IntPtr memDc = CreateCompatibleDC(screenDc);
+            IntPtr hBitmap = IntPtr.Zero;
+            IntPtr oldBitmap = IntPtr.Zero;
 
-            foreach (var dev in _devices)
+            try
             {
-                Color itemColor = dev.BatteryPercent <= 20
-                    ? Color.FromArgb(232, 35, 35)
-                    : fgColor;
+                hBitmap = bitmap.GetHbitmap(Color.FromArgb(0));
+                oldBitmap = SelectObject(memDc, hBitmap);
 
-                int iconY = (Height - iconH) / 2;
-                DrawDeviceVectorIcon(g, dev.Category, new Rectangle(cursorX, iconY, iconW, iconH), itemColor, scale);
-                cursorX += iconW + gap;
+                var size = new SIZE { cx = bitmap.Width, cy = bitmap.Height };
+                var pointSource = new POINT { x = 0, y = 0 };
+                var topPos = new POINT { x = Left, y = Top };
+                var blend = new BLENDFUNCTION
+                {
+                    BlendOp = 0,
+                    BlendFlags = 0,
+                    SourceConstantAlpha = 255,
+                    AlphaFormat = 1
+                };
 
-                string pctText = $"{dev.BatteryPercent}%";
-                SizeF textSize = g.MeasureString(pctText, font);
-                float textY = (Height - textSize.Height) / 2f;
-
-                using var textBrush = new SolidBrush(itemColor);
-                g.DrawString(pctText, font, textBrush, cursorX, textY);
-
-                cursorX += (int)Math.Ceiling(textSize.Width) + itemPad;
+                UpdateLayeredWindow(Handle, screenDc, ref topPos, ref size, memDc, ref pointSource, 0, ref blend, 2);
+            }
+            finally
+            {
+                if (oldBitmap != IntPtr.Zero) SelectObject(memDc, oldBitmap);
+                if (hBitmap != IntPtr.Zero) DeleteObject(hBitmap);
+                DeleteDC(memDc);
+                ReleaseDC(IntPtr.Zero, screenDc);
             }
         }
 
@@ -207,7 +248,6 @@ namespace BatteryTray
 
             if (category == DeviceCategory.Keyboard)
             {
-                // Vẽ biểu tượng bàn phím nhỏ giống hệt ảnh mẫu
                 using var path = CreateRoundedRect(bounds, (int)(2 * scale));
                 g.DrawPath(pen, path);
 
@@ -225,7 +265,6 @@ namespace BatteryTray
             }
             else if (category == DeviceCategory.Mouse)
             {
-                // Vẽ biểu tượng chuột đứng gọn gàng
                 int mw = (int)(11 * scale);
                 int mh = (int)(15 * scale);
                 var mRect = new Rectangle(bounds.Left + (bounds.Width - mw) / 2, bounds.Top + (bounds.Height - mh) / 2, mw, mh);
@@ -236,7 +275,6 @@ namespace BatteryTray
             }
             else
             {
-                // Biểu tượng pin chung cho tai nghe / tay cầm
                 using var path = CreateRoundedRect(bounds, (int)(2 * scale));
                 g.DrawPath(pen, path);
                 g.FillRectangle(brush, bounds.Left + 3, bounds.Top + 3, bounds.Width - 6, bounds.Height - 6);
@@ -264,6 +302,21 @@ namespace BatteryTray
         [StructLayout(LayoutKind.Sequential)]
         private struct RECT { public int Left, Top, Right, Bottom; }
 
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT { public int x, y; }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct SIZE { public int cx, cy; }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private struct BLENDFUNCTION
+        {
+            public byte BlendOp;
+            public byte BlendFlags;
+            public byte SourceConstantAlpha;
+            public byte AlphaFormat;
+        }
+
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr FindWindow(string lpClassName, string? lpWindowName);
 
@@ -275,5 +328,26 @@ namespace BatteryTray
 
         [DllImport("user32.dll")]
         private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
+
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll", ExactSpelling = true)]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern IntPtr CreateCompatibleDC(IntPtr hDC);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll", ExactSpelling = true)]
+        private static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
+        private static extern bool DeleteObject(IntPtr hObject);
     }
 }
