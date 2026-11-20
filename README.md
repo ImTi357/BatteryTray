@@ -15,8 +15,9 @@
   - **ATK** (đầu thu Nearlink 8K `VID_373B&PID_108C`).
   - **Logitech** (đầu thu Lightspeed, Logi Bolt, Unifying `VID_046D` theo chuẩn HID++ 2.0).
   - **Razer** (đầu thu HyperSpeed / Wireless `VID_1532` theo giao thức OpenRazer 90-byte).
-  - Các hãng chuột khác sẽ được cập nhật trong những phiên bản tiếp theo.
+  - **Darmoshark, Ajazz, Zaopin, Delux** (nhóm đầu thu dùng chip Compx `VID_3554` / `VID_25A7`).
+  - Các hãng khác sẽ tiếp tục được cập nhật trong những phiên bản sau.
 - Xây dựng theo kiến trúc mô-đun `IBatteryProvider`, thuận tiện để mở rộng thêm giao thức của các hãng mới.
 
 ## Cài đặt
-Tải tệp cài đặt `BatteryTray_Setup_v1.1.0.exe` tại mục **Releases** bên phải và chạy trình cài đặt.
+Tải tệp cài đặt mới nhất tại mục **Releases** bên phải và chạy trình cài đặt.
