@@ -1,5 +1,7 @@
 ﻿# BatteryTray
 
+[![Build Status](https://github.com/ImTi357/BatteryTray/actions/workflows/build-release.yml/badge.svg)](https://github.com/ImTi357/BatteryTray/actions/workflows/build-release.yml) [![Latest Release](https://img.shields.io/github/v/release/ImTi357/BatteryTray?label=Release&color=brightgreen)](https://github.com/ImTi357/BatteryTray/releases/latest) [![Total Downloads](https://img.shields.io/github/downloads/ImTi357/BatteryTray/total?label=Downloads&color=blue)](https://github.com/ImTi357/BatteryTray/releases) ![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6?logo=windows)
+
 Ứng dụng Windows nhẹ hiển thị trực tiếp biểu tượng và phần trăm pin của chuột, bàn phím không dây ngay trên thanh Taskbar.
 
 ## Giao diện thực tế
@@ -21,4 +23,4 @@
 - Xây dựng theo kiến trúc mô-đun `IBatteryProvider`, thuận tiện để mở rộng thêm giao thức của các hãng mới.
 
 ## Cài đặt
-Tải tệp cài đặt mới nhất tại mục **Releases** bên phải và chạy trình cài đặt.
+Tải tệp cài đặt mới nhất tại mục **[Releases](https://github.com/ImTi357/BatteryTray/releases/latest)** và chạy trình cài đặt.
