@@ -8,6 +8,7 @@
 - Hỗ trợ đọc phần trăm pin qua đầu thu **USB 2.4GHz** cho:
   - **ATK** (đầu thu Nearlink 8K `VID_373B&PID_108C`).
   - **Logitech** (đầu thu Lightspeed, Logi Bolt, Unifying `VID_046D` theo chuẩn HID++ 2.0).
+  - **Razer** (đầu thu HyperSpeed / Wireless `VID_1532` theo giao thức OpenRazer 90-byte).
   - Các hãng chuột khác sẽ được cập nhật trong những phiên bản tiếp theo.
 - Xây dựng theo kiến trúc mô-đun `IBatteryProvider`, thuận tiện để mở rộng thêm giao thức của các hãng mới.
 
