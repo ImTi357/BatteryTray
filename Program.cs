@@ -26,7 +26,8 @@ namespace BatteryTray
             var providers = new IBatteryProvider[]
             {
                 new BluetoothBatteryProvider(),
-                new AtkReceiverProvider()
+                new AtkReceiverProvider(),
+                new LogitechProvider()
             };
 
             var aggregator = new BatteryAggregator(providers);
