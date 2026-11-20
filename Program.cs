@@ -29,7 +29,8 @@ namespace BatteryTray
                 new AtkReceiverProvider(),
                 new LogitechProvider(),
                 new RazerProvider(),
-                new CompxProvider()
+                new CompxProvider(),
+                new QmkViaProvider()
             };
 
             var aggregator = new BatteryAggregator(providers);
