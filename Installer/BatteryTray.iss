@@ -8,9 +8,9 @@ DefaultGroupName=BatteryTray
 PrivilegesRequired=lowest
 AppMutex=Global\BatteryTraySingleInstanceMutex
 CloseApplications=yes
-OutputDir=C:\Projects\BatteryTray\Installer
+OutputDir=.
 OutputBaseFilename=BatteryTray_Setup_v1.1.0
-SetupIconFile=C:\Projects\BatteryTray\app.ico
+SetupIconFile=..\app.ico
 UninstallDisplayIcon={app}\BatteryTray.exe
 Compression=lzma2
 SolidCompression=yes
@@ -24,7 +24,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "startup"; Description: "Khởi động cùng Windows (Start with Windows)"; GroupDescription: "Tùy chọn khởi chạy:"
 
 [Files]
-Source: "C:\Projects\BatteryTray\bin\Release\net10.0-windows\win-x64\publish\BatteryTray.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\bin\Release\net10.0-windows\win-x64\publish\BatteryTray.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\BatteryTray"; Filename: "{app}\BatteryTray.exe"
@@ -36,4 +36,5 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\BatteryTray.exe"; Description: "Mở BatteryTray ngay sau khi cài đặt"; Flags: nowait postinstall skipifsilent
+
 
