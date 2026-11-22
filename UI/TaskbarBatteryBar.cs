@@ -14,6 +14,8 @@ namespace BatteryTray
         private List<DeviceBatteryInfo> _devices = new();
         private bool _isDarkTaskbar = true;
         private bool _showBackgroundPill = false;
+        private bool _mouseDownOnBar = false;
+        private DateTime _lastMenuClosedUtc = DateTime.MinValue;
         private readonly ContextMenuStrip _contextMenu;
         private readonly System.Windows.Forms.Timer _dockSyncTimer;
 
@@ -25,13 +27,30 @@ namespace BatteryTray
         public TaskbarBatteryBar(ContextMenuStrip contextMenu)
         {
             _contextMenu = contextMenu;
+            _contextMenu.AutoClose = true;
+
+            // Đảm bảo Windows luôn nhận diện cửa sổ trước khi mở menu để bấm ra ngoài là tự đóng
+            _contextMenu.Opening += (_, _) =>
+            {
+                if (IsHandleCreated)
+                {
+                    SetForegroundWindow(Handle);
+                }
+            };
+            _contextMenu.Closed += (_, _) =>
+            {
+                _lastMenuClosedUtc = DateTime.UtcNow;
+                _mouseDownOnBar = false;
+            };
 
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             TopMost = true;
             StartPosition = FormStartPosition.Manual;
 
+            MouseDown += OnBarMouseDown;
             MouseUp += OnBarMouseUp;
+            MouseLeave += (_, _) => _mouseDownOnBar = false;
 
             _dockSyncTimer = new System.Windows.Forms.Timer { Interval = 300 };
             _dockSyncTimer.Tick += (_, _) => SyncPositionToTaskbar();
@@ -130,10 +149,39 @@ namespace BatteryTray
             return 48;
         }
 
+        private void OnBarMouseDown(object? sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)
+                return;
+
+            // Nếu menu đang mở hoặc vừa đóng dưới 250ms thì đóng lại và bỏ qua lần nhấn này
+            if (_contextMenu.Visible)
+            {
+                _contextMenu.Close();
+                _mouseDownOnBar = false;
+                return;
+            }
+
+            if ((DateTime.UtcNow - _lastMenuClosedUtc).TotalMilliseconds < 250)
+            {
+                _mouseDownOnBar = false;
+                return;
+            }
+
+            _mouseDownOnBar = ClientRectangle.Contains(e.Location);
+        }
+
         private void OnBarMouseUp(object? sender, MouseEventArgs e)
         {
+            bool wasValidClick = _mouseDownOnBar && ClientRectangle.Contains(e.Location);
+            _mouseDownOnBar = false;
+
+            if (!wasValidClick)
+                return;
+
             if (e.Button == MouseButtons.Right || e.Button == MouseButtons.Left)
             {
+                SetForegroundWindow(Handle);
                 Point screenPt = PointToScreen(new Point(0, 0));
                 _contextMenu.Show(screenPt, ToolStripDropDownDirection.AboveRight);
             }
@@ -169,7 +217,6 @@ namespace BatteryTray
                 }
                 else
                 {
-                    // Lớp nền alpha = 1 (vô hình với mắt và ảnh chụp nhưng giúp vùng trống giữa icon và chữ luôn nhận click chuột)
                     using var hitBrush = new SolidBrush(Color.FromArgb(1, 0, 0, 0));
                     g.FillRectangle(hitBrush, 0, 0, Width, Height);
                 }
@@ -329,6 +376,10 @@ namespace BatteryTray
         [DllImport("user32.dll")]
         private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
 
@@ -344,7 +395,7 @@ namespace BatteryTray
         [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern bool DeleteDC(IntPtr hdc);
 
-        [DllImport("gdi32.dll", ExactSpelling = true)]
+        [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
 
         [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
