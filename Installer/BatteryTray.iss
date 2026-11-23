@@ -41,3 +41,4 @@ Filename: "{app}\BatteryTray.exe"; Description: "Mở BatteryTray ngay sau khi c
 
 
 
+

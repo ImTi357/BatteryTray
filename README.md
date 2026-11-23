@@ -26,4 +26,7 @@
 ## Cài đặt
 Tải tệp cài đặt mới nhất tại mục **[Releases](https://github.com/ImTi357/BatteryTray/releases/latest)** và chạy trình cài đặt.
 
-
+## Yêu cầu hỗ trợ chuột / bàn phím / tai nghe mới
+Nếu thiết bị không dây của bạn chưa hiển thị pin qua đầu thu USB 2.4GHz:
+1. Mở menu **BatteryTray** trên thanh Taskbar -> chọn **Export device diagnostic log (GitHub)**.
+2. Mở một **Issue** mới trên GitHub và dán nội dung log vừa xuất (Ctrl + V) kèm tên hãng, tên model thiết bị.

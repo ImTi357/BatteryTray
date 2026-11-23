@@ -40,9 +40,13 @@ namespace BatteryTray
             _contextMenu = contextMenu;
             _contextMenu.AutoClose = true;
 
-            _contextMenu.Opening += (_, _) =>
+            _contextMenu.Opening += (_, e) =>
             {
                 if (IsHandleCreated) SetForegroundWindow(Handle);
+                if (!e.Cancel)
+                {
+                    DiagnosticExporter.EnsureMenuItem(_contextMenu, () => _devices, this);
+                }
             };
             _contextMenu.Closed += (_, _) =>
             {
@@ -438,4 +442,5 @@ namespace BatteryTray
         private static extern bool DeleteObject(IntPtr hObject);
     }
 }
+
 
