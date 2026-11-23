@@ -1,6 +1,7 @@
 ﻿namespace BatteryTray
 {
-    public enum DeviceCategory { Keyboard, Mouse, Audio, Gamepad, Other }
+    public enum DeviceCategory { Keyboard, Mouse, Audio, Gamepad, Other,
+        Headset }
     public enum ConnectionType { Bluetooth, UsbWireless24G }
 
     public class DeviceBatteryInfo
@@ -32,3 +33,4 @@
         };
     }
 }
+

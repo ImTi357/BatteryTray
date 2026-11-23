@@ -18,10 +18,12 @@
   - **Logitech** (đầu thu Lightspeed, Logi Bolt, Unifying `VID_046D` theo chuẩn HID++ 2.0).
   - **Razer** (đầu thu HyperSpeed / Wireless `VID_1532` theo giao thức OpenRazer 90-byte).
   - **Darmoshark, Ajazz, Zaopin, Delux** (nhóm đầu thu dùng chip Compx `VID_3554` / `VID_25A7`).
-  - **Keychron, NuPhy & Bàn phím QMK/VIA** (`VID_3434`, `VID_362D` qua kênh Raw HID `0xFF60:0x61`).
+  - **Keychron, NuPhy & Bàn phím QMK/VIA** (`VID_3434`, `VID_362D` qua kênh Raw HID `0xFF60:0x61`).
+  - **Tai nghe không dây (SteelSeries, HyperX, Corsair, Logitech G, Razer)** qua đầu thu USB 2.4GHz và tai nghe Bluetooth (AirPods, Sony, JBL, Marshall...).
   - Các hãng khác sẽ tiếp tục được cập nhật trong những phiên bản sau.
 - Xây dựng theo kiến trúc mô-đun `IBatteryProvider`, thuận tiện để mở rộng thêm giao thức của các hãng mới.
 
 ## Cài đặt
 Tải tệp cài đặt mới nhất tại mục **[Releases](https://github.com/ImTi357/BatteryTray/releases/latest)** và chạy trình cài đặt.
+
 

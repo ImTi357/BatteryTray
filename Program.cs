@@ -30,7 +30,8 @@ namespace BatteryTray
                 new LogitechProvider(),
                 new RazerProvider(),
                 new CompxProvider(),
-                new QmkViaProvider()
+                new QmkViaProvider(),
+                new WirelessHeadsetProvider()
             };
 
             var aggregator = new BatteryAggregator(providers);

@@ -24,18 +24,22 @@ namespace BatteryTray
         private const int WS_EX_NOACTIVATE = 0x08000000;
         private const int WS_EX_TOPMOST = 0x00000008;
 
+        private static readonly string[] HeadsetKeywords =
+        {
+            "headset", "headphone", "airpods", "earbud", "buds", "earphone",
+            "wh-", "wf-", "bose", "jbl", "marshall", "beats", "sennheiser",
+            "arctis", "cloud ", "blackshark", "barracuda", "kraken", "nari",
+            "void", "virtuoso", "hs70", "hs80", "g733", "g535", "g435", "g pro x", "pro x 2", "astro"
+        };
+
         public TaskbarBatteryBar(ContextMenuStrip contextMenu)
         {
             _contextMenu = contextMenu;
             _contextMenu.AutoClose = true;
 
-            // Đảm bảo Windows luôn nhận diện cửa sổ trước khi mở menu để bấm ra ngoài là tự đóng
             _contextMenu.Opening += (_, _) =>
             {
-                if (IsHandleCreated)
-                {
-                    SetForegroundWindow(Handle);
-                }
+                if (IsHandleCreated) SetForegroundWindow(Handle);
             };
             _contextMenu.Closed += (_, _) =>
             {
@@ -131,10 +135,7 @@ namespace BatteryTray
             int x = anchorRight - Width - 4;
             int y = trayRect.Top + (taskbarHeight - Height) / 2;
 
-            if (Left != x || Top != y)
-            {
-                Location = new Point(x, y);
-            }
+            if (Left != x || Top != y) Location = new Point(x, y);
             SetWindowPos(Handle, new IntPtr(-1), x, y, Width, Height, 0x0010 | 0x0002 | 0x0001);
         }
 
@@ -151,10 +152,8 @@ namespace BatteryTray
 
         private void OnBarMouseDown(object? sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right)
-                return;
+            if (e.Button != MouseButtons.Left && e.Button != MouseButtons.Right) return;
 
-            // Nếu menu đang mở hoặc vừa đóng dưới 250ms thì đóng lại và bỏ qua lần nhấn này
             if (_contextMenu.Visible)
             {
                 _contextMenu.Close();
@@ -175,9 +174,7 @@ namespace BatteryTray
         {
             bool wasValidClick = _mouseDownOnBar && ClientRectangle.Contains(e.Location);
             _mouseDownOnBar = false;
-
-            if (!wasValidClick)
-                return;
+            if (!wasValidClick) return;
 
             if (e.Button == MouseButtons.Right || e.Button == MouseButtons.Left)
             {
@@ -236,8 +233,9 @@ namespace BatteryTray
                         ? Color.FromArgb(232, 35, 35)
                         : fgColor;
 
+                    var visualCategory = ResolveVisualCategory(dev);
                     int iconY = (Height - iconH) / 2;
-                    DrawDeviceVectorIcon(g, dev.Category, new Rectangle(cursorX, iconY, iconW, iconH), itemColor, scale);
+                    DrawDeviceVectorIcon(g, visualCategory, new Rectangle(cursorX, iconY, iconW, iconH), itemColor, scale);
                     cursorX += iconW + gap;
 
                     string pctText = $"{dev.BatteryPercent}%";
@@ -252,6 +250,21 @@ namespace BatteryTray
             }
 
             ApplyBitmapToLayeredWindow(bitmap);
+        }
+
+        private static DeviceCategory ResolveVisualCategory(DeviceBatteryInfo dev)
+        {
+            if (dev.Category == DeviceCategory.Headset)
+                return DeviceCategory.Headset;
+
+            string lowerName = (dev.Name ?? string.Empty).ToLowerInvariant();
+            foreach (string kw in HeadsetKeywords)
+            {
+                if (lowerName.Contains(kw))
+                    return DeviceCategory.Headset;
+            }
+
+            return dev.Category;
         }
 
         private void ApplyBitmapToLayeredWindow(Bitmap bitmap)
@@ -320,6 +333,25 @@ namespace BatteryTray
                 int wheelX = mRect.Left + mw / 2;
                 g.DrawLine(pen, wheelX, mRect.Top + (int)(3 * scale), wheelX, mRect.Top + (int)(6 * scale));
             }
+            else if (category == DeviceCategory.Headset)
+            {
+                int hw = (int)(14 * scale);
+                int hh = (int)(13 * scale);
+                int hx = bounds.Left + (bounds.Width - hw) / 2;
+                int hy = bounds.Top + (bounds.Height - hh) / 2;
+
+                // Vòng chụp đầu (headband)
+                g.DrawArc(pen, hx + (int)(1 * scale), hy, hw - (int)(2 * scale), hh - (int)(1 * scale), 180, 180);
+
+                // Hai chụp tai trái và phải
+                int cupW = Math.Max(2, (int)(3 * scale));
+                int cupH = Math.Max(4, (int)(5.5f * scale));
+                int cupY = hy + hh - cupH;
+                using var leftCup = CreateRoundedRect(new Rectangle(hx, cupY, cupW, cupH), Math.Max(1, (int)(1 * scale)));
+                using var rightCup = CreateRoundedRect(new Rectangle(hx + hw - cupW, cupY, cupW, cupH), Math.Max(1, (int)(1 * scale)));
+                g.FillPath(brush, leftCup);
+                g.FillPath(brush, rightCup);
+            }
             else
             {
                 using var path = CreateRoundedRect(bounds, (int)(2 * scale));
@@ -331,7 +363,8 @@ namespace BatteryTray
         private static GraphicsPath CreateRoundedRect(Rectangle rect, int radius)
         {
             var path = new GraphicsPath();
-            int d = Math.Max(1, radius * 2);
+            int safeRadius = Math.Min(radius, Math.Min(rect.Width, rect.Height) / 2);
+            int d = Math.Max(1, safeRadius * 2);
             path.AddArc(rect.X, rect.Y, d, d, 180, 90);
             path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
             path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
@@ -386,7 +419,7 @@ namespace BatteryTray
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern IntPtr GetDC(IntPtr hWnd);
 
-        [DllImport("user32.dll", ExactSpelling = true)]
+        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         [DllImport("gdi32.dll", ExactSpelling = true, SetLastError = true)]
