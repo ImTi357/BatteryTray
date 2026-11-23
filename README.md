@@ -24,9 +24,18 @@
 - Xây dựng theo kiến trúc mô-đun `IBatteryProvider`, thuận tiện để mở rộng thêm giao thức của các hãng mới.
 
 ## Cài đặt
-Tải tệp cài đặt mới nhất tại mục **[Releases](https://github.com/ImTi357/BatteryTray/releases/latest)** và chạy trình cài đặt.
+Tải phiên bản mới nhất tại mục **[Releases](https://github.com/ImTi357/BatteryTray/releases/latest)** và chọn **1 trong 2 tệp** sau:
+- **`BatteryTray_Setup_v*.exe` (Khuyên dùng):** Bộ cài chuẩn cho Windows 10/11, tự tạo lối tắt, hỗ trợ khởi động cùng Windows và gỡ cài đặt gọn gàng.
+- **`BatteryTray.exe` (Portable):** Bản chạy trực tiếp không cần cài đặt.
 
+### Lưu ý khi Windows hiện cảnh báo SmartScreen
+Vì **BatteryTray** là dự án mã nguồn mở cá nhân và chưa mua chứng chỉ chữ ký số thương mại (Code Signing Certificate), Windows có thể hiện màn hình xanh **"Windows bảo vệ máy tính của bạn"** ở lần mở đầu tiên:
+1. Bấm vào dòng chữ **Thông tin thêm** (*More info*).
+2. Bấm nút **Vẫn chạy** (*Run anyway*).
+
+> Toàn bộ tệp phát hành đều được biên dịch tự động trên **GitHub Actions** trực tiếp từ mã nguồn công khai trong kho chứa này. Bạn có thể kiểm tra kết quả quét **VirusTotal** đính kèm trong từng bản **Release Notes**.
 ## Yêu cầu hỗ trợ chuột / bàn phím / tai nghe mới
 Nếu thiết bị không dây của bạn chưa hiển thị pin qua đầu thu USB 2.4GHz:
 1. Mở menu **BatteryTray** trên thanh Taskbar -> chọn **Export device diagnostic log (GitHub)**.
 2. Mở một **Issue** mới trên GitHub và dán nội dung log vừa xuất (Ctrl + V) kèm tên hãng, tên model thiết bị.
+
