@@ -27,6 +27,7 @@ namespace BatteryTray
             {
                 new BluetoothBatteryProvider(),
                 new AtkReceiverProvider(),
+                new AttackSharkProvider(),
                 new LogitechProvider(),
                 new RazerProvider(),
                 new CompxProvider(),

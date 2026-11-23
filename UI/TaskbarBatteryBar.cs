@@ -26,10 +26,13 @@ namespace BatteryTray
 
         private static readonly string[] HeadsetKeywords =
         {
-            "headset", "headphone", "airpods", "earbud", "buds", "earphone",
-            "wh-", "wf-", "bose", "jbl", "marshall", "beats", "sennheiser",
-            "arctis", "cloud ", "blackshark", "barracuda", "kraken", "nari",
-            "void", "virtuoso", "hs70", "hs80", "g733", "g535", "g435", "g pro x", "pro x 2", "astro"
+            "headset", "headphone", "airpods", "earbud", "buds", "earphone", "tws", "audio",
+            "wh-", "wf-", "inzone", "pulse 3d", "pulse elite", "bose", "jbl", "marshall", "beats", "sennheiser", "epos", "moondrop",
+            "arctis", "cloud ", "blackshark", "barracuda", "kraken", "nari", "kaira",
+            "void", "virtuoso", "hs70", "hs80", "g733", "g535", "g435", "g522", "g pro x", "pro x 2", "astro",
+            "rog delta", "rog pelta", "rog cetra", "tuf gaming h", "turtle beach", "stealth ",
+            "mercury", "neptune", "n9", "attack shark", "l80", "g300", "g500", "vxe v1",
+            "mchose v9", "mchose g9", "mchose x9", "dareu", "eh7", "a710", "edifier", "hecate", "fifine", "somic", "rapoo vh"
         };
 
         public TaskbarBatteryBar(ContextMenuStrip contextMenu)
@@ -435,3 +438,4 @@ namespace BatteryTray
         private static extern bool DeleteObject(IntPtr hObject);
     }
 }
+

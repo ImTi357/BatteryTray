@@ -7,14 +7,25 @@ namespace BatteryTray
 {
     public class CompxProvider : IBatteryProvider
     {
-        public string ProviderName => "Compx Wireless HID (Darmoshark/Ajazz/Zaopin)";
+        public string ProviderName => "Compx Wireless HID (VXE/Darmoshark/Ajazz/Zaopin/MCHOSE)";
 
-        // Mã VID phổ biến của đầu thu không dây sử dụng chip Compx CX52850 / CX52650
-        private static readonly int[] VendorIds = { 0x3554, 0x25A7 };
+        // Danh sách VID từ cộng đồng nguồn mở sử dụng khung giao thức Compx CX52850 / CX52650 (ReportID 0x08)
+        private static readonly int[] VendorIds =
+        {
+            0x3554, // Compx chính (VXE R1, Darmoshark, Ajazz, Zaopin, Delux, Scyrox, Attack Shark đời mới)
+            0x25A7, // Compx OEM
+            0x320F, // OEM Compx (VXE / dòng chuột nội địa)
+            0x3537, // OEM Compx
+            0x3837, // MCHOSE
+            0x2023, // MCHOSE / OEM
+            0x36A7, // WLMouse
+            0x3710, // Pulsar 4K/8K
+            0x3770, // Hitscan
+            0x093A  // PixArt / Incott OEM
+        };
 
         private static readonly Dictionary<string, (int Percent, string Name, DeviceCategory Category)> _cache = new();
 
-        // Bảng nhận diện một số mẫu đầu thu/chuột phổ biến dùng chip Compx
         private static readonly Dictionary<string, string> KnownDevices = new()
         {
             ["3554:F50E"] = "Darmoshark M3 / M3s Wireless",
@@ -24,7 +35,15 @@ namespace BatteryTray
             ["3554:F511"] = "Ajazz AJ139 Pro / AJ159 Wireless",
             ["3554:F515"] = "Zaopin Z1 Pro Wireless",
             ["3554:F520"] = "Zaopin Z2 Wireless",
-            ["3554:F50D"] = "Delux M800 Ultra / M600 Wireless"
+            ["3554:F50D"] = "Delux M800 Ultra / M600 Wireless",
+            ["3554:F58E"] = "VXE Dragonfly R1 Wireless",
+            ["3554:F58F"] = "VXE Dragonfly R1 Pro / Pro Max",
+            ["3554:F595"] = "VXE / ATK Wireless Mouse (4K/8K)",
+            ["3554:F5D5"] = "Scyrox V8 / V6 Wireless",
+            ["3554:F52F"] = "Attack Shark X3 Pro / R3 Wireless",
+            ["3837:0001"] = "MCHOSE A5 / A7 Wireless",
+            ["36A7:0001"] = "WLMouse Beast X Wireless",
+            ["3710:5402"] = "Pulsar Wireless Mouse (4K/8K)"
         };
 
         public IEnumerable<DeviceBatteryInfo> GetDevices()
@@ -121,11 +140,9 @@ namespace BatteryTray
                     int outLen = Math.Max(17, device.GetMaxOutputReportLength());
                     byte[] req = new byte[outLen];
 
-                    // Khung lệnh đọc pin chuẩn Compx: ReportID 0x08, Command 0x04
                     req[0] = 0x08;
                     req[1] = 0x04;
 
-                    // Checksum 17-byte đặc trưng của firmware Compx: (0x55 - sum(byte[0..15])) & 0xFF
                     int sum = 0;
                     for (int i = 0; i < 16; i++) sum += req[i];
                     req[16] = (byte)((0x55 - (sum & 0xFF)) & 0xFF);
@@ -141,7 +158,6 @@ namespace BatteryTray
 
                         if (resp[0] == 0x08 && resp[1] == 0x04)
                         {
-                            // Tùy bản firmware 1K hay 4K/8K, % pin nằm ở byte 5 hoặc byte 6
                             int percent = 0;
                             bool isCharging = false;
 
@@ -156,18 +172,14 @@ namespace BatteryTray
                                 isCharging = resp[5] == 0x01;
                             }
 
-                            if (percent <= 0)
-                                return null;
+                            if (percent <= 0) return null;
 
                             string name = ResolveDeviceName(device);
                             return (percent, isCharging, name, DeviceCategory.Mouse);
                         }
                     }
                 }
-                catch
-                {
-                    // Timeout khi chuột đang ở chế độ ngủ sâu hoặc tắt nguồn
-                }
+                catch { }
             }
 
             return null;
